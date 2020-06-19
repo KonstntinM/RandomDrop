@@ -4,7 +4,6 @@ website: https://github.com/KonstntinM/RandomDrop
 description: Leaves a random block instead of the original drop.
 main: de.randomdrop.main
 version: 1
-api-version: 1.15
 commands:
   drop:
     description: Reshuffle the Dropped Blocks
