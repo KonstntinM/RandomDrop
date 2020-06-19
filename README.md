@@ -6,7 +6,7 @@ Minecraft Bukkit plugin that drops a different block when a block is removed.
 ## Installation
 To use this plugin on your Minecraft server you have to follow these steps.
 
-1. download the .jar file of the plugin [here](/KonstntinM/RandomDrop/raw/master/out/RandomDrop_Version-1.jar)
+1. download the .jar file of the plugin [here](https://github.com/KonstntinM/RandomDrop/raw/master/out/RandomDrop_Version-1.jar)
 2. open the directory of your server, open the "plugins" folder and copy the .jar file to it
 3. restart your server
 
