@@ -1,6 +1,5 @@
 package de.randomdrop;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -28,9 +27,19 @@ public class main extends JavaPlugin implements Listener {
     @Override
     public void onEnable () {
 
-        if (!loadBlocks()) {
+        try {
+            if (!loadBlocks()) {
+                shiftBlocks();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            shiftBlocks();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
             shiftBlocks();
         }
+
+        loadPreferences();
 
         myExecutor = new onCommand(this);
         getCommand("drop").setExecutor(myExecutor);
@@ -51,7 +60,7 @@ public class main extends JavaPlugin implements Listener {
         It returns the success of the process. If the HashMap is zero or there is another error, the values are regenerated.
      */
 
-    public boolean loadBlocks () {
+    public boolean loadBlocks () throws IOException, ClassNotFoundException {
 
         //check if file exists
         File f = new File("MaterialsShift.ser");
@@ -67,20 +76,31 @@ public class main extends JavaPlugin implements Listener {
 
             ois.close();
             fis.close();
-
-            fis = new FileInputStream("RandomDrop.ser");
-            ois = new ObjectInputStream(fis);
-
-            dropItems = (boolean) ois.readObject();
-
-            ois.close();
-            fis.close();
-        } catch (IOException | ClassNotFoundException ioe) {
-            System.out.println("Look out! There was an error when reading the values of the mixed materials.");
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("[" + PluginName + "] Waring! " + e.toString());
+            System.out.println("[" + PluginName + "] Look out! There was an error when reading the values of the mixed materials.");
             return false;
         }
 
         return Materials != null;
+    }
+
+    public void loadPreferences () {
+        File f = new File("RandomDrop.ser");
+        if (f.exists()) {
+            try {
+                FileInputStream fis = new FileInputStream("RandomDrop.ser");
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                dropItems = (boolean) ois.readObject();
+
+                ois.close();
+                fis.close();
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("[" + PluginName + "] Waring! " + e.toString());
+                System.out.println("[" + PluginName + "] Look out! There was an error when reading your preferences.");
+            }
+        }
     }
 
     /*
