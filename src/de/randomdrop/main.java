@@ -196,11 +196,3 @@ public class main extends JavaPlugin implements Listener {
         }
     }
 }
-
-/*
-    CACHE:
-
-    public static HashMap<Material, Material> Materials = new HashMap<Material, Material>();
-    ItemStack i = new ItemStack(Materials.get(event.getBlock().getType()));
-
- */
