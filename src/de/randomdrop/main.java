@@ -3,12 +3,16 @@ package de.randomdrop;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
 
 import java.io.*;
 import java.net.URL;
@@ -18,11 +22,9 @@ import java.util.Random;
 
 public class main extends JavaPlugin implements Listener {
 
-    public static HashMap Materials = new HashMap<Material, Material>();
+    public static HashMap Materials = new HashMap<Integer, Material>();
 
     static String PluginName = "RandomDrop";
-    static boolean dropItems;
-    private onCommand myExecutor;
 
     @Override
     public void onEnable () {
@@ -31,22 +33,19 @@ public class main extends JavaPlugin implements Listener {
             if (!loadBlocks()) {
                 shiftBlocks();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            shiftBlocks();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("[" + PluginName + "] FATAL: " + e);
             shiftBlocks();
         }
 
-        loadPreferences();
-
-        myExecutor = new onCommand(this);
+        onCommand myExecutor = new onCommand(this);
         getCommand("drop").setExecutor(myExecutor);
 
         getServer().getPluginManager().registerEvents(this, this);
 
         register();
+
+        Player p = null;
 
         System.out.println("The " + PluginName + " plugin was started successfully.");
     }
@@ -70,7 +69,7 @@ public class main extends JavaPlugin implements Listener {
 
         try {
             FileInputStream fis = new FileInputStream("MaterialsShift.ser");
-            ObjectInputStream ois = new ObjectInputStream(fis);
+            BukkitObjectInputStream ois = new BukkitObjectInputStream(fis);
 
             Materials = (HashMap) ois.readObject();
 
@@ -85,97 +84,59 @@ public class main extends JavaPlugin implements Listener {
         return Materials != null;
     }
 
-    public void loadPreferences () {
-        File f = new File("RandomDrop.ser");
-        if (f.exists()) {
+    /*
+       This method takes a Block object as an attribute and checks whether a drop has already been defined for the block (indicated by its hash value).
+       If this is the case, the defined block is returned.If no drop has been defined, a new block is searched for until it can be dropped and has not yet been defined.
+       Finally, the entire HashMap is saved again.
+     */
+
+    public static Material getRandomMaterial (Block b) {
+        if (Materials.get(b.getBlockData().hashCode()) == null) {
+            int i = 0;
+            while ( Materials.get(b.getBlockData().hashCode()) == null ) {
+                Material randomMaterial = Material.values()[(new Random()).nextInt(Material.values().length)];
+                if (randomMaterial.isItem() && !Materials.containsValue(randomMaterial) || i>1200 && randomMaterial.isItem()){
+                    Materials.put(b.getBlockData().hashCode(), randomMaterial);
+                }
+                i++;
+            }
+
             try {
-                FileInputStream fis = new FileInputStream("RandomDrop.ser");
-                ObjectInputStream ois = new ObjectInputStream(fis);
+                FileOutputStream fos = new FileOutputStream("MaterialsShift.ser");
+                BukkitObjectOutputStream oos = new BukkitObjectOutputStream(fos);
 
-                dropItems = (boolean) ois.readObject();
+                oos.writeObject(Materials);
 
-                ois.close();
-                fis.close();
-            } catch (IOException | ClassNotFoundException e) {
-                System.out.println("[" + PluginName + "] Waring! " + e.toString());
-                System.out.println("[" + PluginName + "] Look out! There was an error when reading your preferences.");
+                oos.close();
+                fos.close();
+            } catch(IOException ioe) {
+                System.out.println(ioe);
+                System.out.println("Look out! There was an error when saving the values of the mixed materials.");
             }
         }
+
+        return (Material) Materials.get(b.getBlockData().hashCode());
     }
 
     /*
-        This method sets the Local, Temporary variable "dropItems" and serializes it to save the settings for the long term.
+        This method clears the HashMap with the hash values of the block types and materials and stores them so that new values are generated when the block is destroyed again.
      */
 
-    public static void setDropItems (boolean b) {
-
-        dropItems = b;
-
-        try {
-            FileOutputStream fos = new FileOutputStream("RandomDrop.ser");
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(dropItems);
-            oos.close();
-            fos.close();
-        } catch(IOException ioe) {
-            System.out.println("Look out! There was an error when saving your preferences.");
-        }
-    }
-
-    /*
-        When the method is executed, two arrays of all materials are created next. The second one is mixed. Now the not solid materials are getting deleted, because they can't get dropped.
-        Then the HashMap "Materials" is filled with the values of the two arrays at the same places.
-        Then the EventListener can use the block of the event as key to get the random block.
-        At the end the HashMap is serialized and saved as a file so that the distribution of the materials remains the same when the server is restarted.
-     */
-
-    public static void shiftBlocks() {
-
-        Material[] m = Material.values();
-        Material[] ms  = Material.values();
-
-        Random r = new Random();
-
-        for (int i = 0; i < ms.length; i++) {
-            if (!dropItems){
-                if ( !ms[i].isBlock() || !ms[i].isSolid() || ms[i].isAir()) {
-                    ms[i] = m[r.nextInt((ms.length))];
-                    i--;
-                }
-            }
-            else {
-                if ( !ms[i].isItem() && !ms[i].isBlock() || ms[i].isAir()) {
-                    ms[i] = m[r.nextInt((ms.length))];
-                    i--;
-                }
-            }
-        }
-
-        for (int i = 0; i < ms.length; i++) {
-            int randomIndexToSwap = r.nextInt(ms.length);
-            Material temp = ms[randomIndexToSwap];
-            ms[randomIndexToSwap] = ms[i];
-            ms[i] = temp;
-        }
+    public static void shiftBlocks () {
 
         Materials.clear();
 
-        for (int i = 0; i < m.length; i++) {
-            Materials.put(m[i], ms[i]);
-        }
-
         try {
             FileOutputStream fos = new FileOutputStream("MaterialsShift.ser");
-
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-                oos.writeObject(Materials);
-                oos.close();
 
+            oos.writeObject(Materials);
+
+            oos.close();
             fos.close();
         } catch(IOException ioe) {
             System.out.println("Look out! There was an error when saving the values of the mixed materials.");
         }
-
     }
 
     /*
@@ -189,16 +150,14 @@ public class main extends JavaPlugin implements Listener {
 
         World w = event.getPlayer().getWorld();
 
-        ItemStack i = new ItemStack((Material) Materials.get(event.getBlock().getType()));
+        ItemStack i = new ItemStack(getRandomMaterial(event.getBlock()));
         i.setAmount(1);
 
         try {
             w.dropItemNaturally(l, i);
         } catch (Exception e) {
-            i = new ItemStack(Material.REDSTONE_ORE);
-            i.setAmount(1);
-
-            w.dropItemNaturally(l, i);
+            System.out.println("[" + PluginName + "] FATAL: " + e);
+            System.out.println("[" + PluginName + "] FATAL: The Material of the Type + " + getRandomMaterial(event.getBlock()) + " could not get dropped.");
         }
     }
 
