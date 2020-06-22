@@ -14,15 +14,9 @@ To use this plugin on your Minecraft server you have to follow these steps.
 - /drop reload
    - *Remixes the connections between the real and the dropped block.*
    - *available for Op's*
-- /drop items (...)
-   - (...) drop
-      - *Enables item dropping when a block is destroyed. By default, the dropping of blocks is active.*
-   - (...) disabled
-      - *Disables item dropping when a block is destroyed. By default, the dropping of blocks is active.* <br> <br>
-   - *available for Op's*
 
 ## Short code description
-The plugin listens to the *BlockBreakEvent*. When a block is destroyed, the EventListener accesses the event object and executes the method *setDropItems*, thus deactivating the regular dropping of an item. Afterwards the linked block is dropped at the former position of the block.
+The plugin listens to the *BlockBreakEvent*. When a block is destroyed, the EventListener accesses the event object and executes the method *setDropItems*, thus deactivating the regular dropping of an item. Then the method "getRandomMaterial()" is called and checks whether a material has already been defined. If this is not the case, a new one is defined. In the end this material is dropped at the place of the destroyed block.
 
 <ins>Feel free to have a look into the code, I have commented a relatively detailed description for most of the methods.</ins>
 
