@@ -30,25 +30,6 @@ public class onCommand implements CommandExecutor {
                 System.out.println("[" + main.PluginName + "] The materials were successfully mixed.");
                 return true;
             }
-            else if (args[0].contentEquals("items")){
-                if (args[1] == null) {
-                    sender.sendMessage(ChatColor.DARK_PURPLE + "[" + main.PluginName + "] You have to give an argument! Look at the description on https://github.com/KonstntinM/RandomDrop .");
-                }
-                else if (args[1].contentEquals("drop")){
-                    main.setDropItems(true);
-                    sender.sendMessage(ChatColor.DARK_PURPLE + "[" + main.PluginName + "] Okay, from now on, items are dropped. To apply the settings execute the \"/drop reload\" command.");
-                }
-
-                else if (args[1].contentEquals("disabled")){
-                    main.setDropItems(false);
-                    sender.sendMessage(ChatColor.DARK_PURPLE + "[" + main.PluginName + "] Okay, from now on, items aren't dropped. To apply the settings execute the \"/drop reload\" command.");
-                }
-                else {
-                    sender.sendMessage(ChatColor.DARK_PURPLE + "[" + main.PluginName + "] Whoops! There was a problem. Look at the description on https://github.com/KonstntinM/RandomDrop .");
-                }
-
-                return true;
-            }
             else {
                 sender.sendMessage(ChatColor.DARK_PURPLE + "[" + main.PluginName + "] Whoops! There was a problem. Look at the description on https://github.com/KonstntinM/RandomDrop .");
             }
